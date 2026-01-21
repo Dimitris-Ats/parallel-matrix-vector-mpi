@@ -183,11 +183,11 @@ double* serial_mult(int n, int **main_array, double *dian) {
 int main(int argc, char *argv[]){
 
     int n, pct_zeros, mult_count, rem, local_count, *row_count, *starting_row;
-    int **main_array, *v, *col_index, *row_index, *local_array, local_nz, *local_v, *local_col_index, *local_row_index;
+    int **main_array = NULL, *v = NULL, *col_index = NULL, *row_index = NULL, *local_array, local_nz, *local_v, *local_col_index, *local_row_index = NULL;
     double *dian, *local_dian;
-    int *main_data;
+    int *main_data = NULL   ;
     long long num_zeros, num_nonzeros;
-    double *dian_a, *dian_b, *dian_c, *temp;
+    double *dian_a = NULL, *dian_b = NULL, *dian_c = NULL, *temp = NULL;
     int comm_sz;                //number of proccesses
     int my_rank;                //rank of current proccess
     int *nz_displ, *nz_count;
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]){
 
         generate_csr_arrays(n, main_array, v, row_index, col_index, num_nonzeros);
 
-         dian_a = malloc(n * sizeof(double));
+         dian_a = calloc(n, sizeof(double));
         if (!dian_a) {
             fprintf(stderr,"malloc dian_b failed\n");
             MPI_Abort(MPI_COMM_WORLD,1);
@@ -311,6 +311,9 @@ int main(int argc, char *argv[]){
 
 
     local_dian = malloc(recvcount * sizeof(double));
+    if(!local_dian){ 
+            fprintf(stderr, "malloc failed for local_dian on rank %d\n", my_rank); MPI_Abort(MPI_COMM_WORLD, 1);
+    }
     temp = malloc(recvcount * sizeof(double));
 
 
@@ -320,7 +323,7 @@ int main(int argc, char *argv[]){
 
 
     if(my_rank != 0) {
-        dian_a = malloc(n * sizeof(double));
+        dian_a = calloc(n, sizeof(double));
         if(!dian_a){ 
             fprintf(stderr, "malloc failed for dian_a on rank %d\n", my_rank); MPI_Abort(MPI_COMM_WORLD, 1);
         }
@@ -384,10 +387,11 @@ int main(int argc, char *argv[]){
     local_nz = nz_count[my_rank];
 
 
-    if(local_nz != 0){
-        local_v = malloc(nz_count[my_rank] * sizeof(int));
-        local_col_index = malloc(nz_count[my_rank] * sizeof(int));
-        local_row_index = malloc((row_count[my_rank] + 1) * sizeof(int));
+    local_v = malloc(nz_count[my_rank] * sizeof(int));
+    local_col_index = malloc(nz_count[my_rank] * sizeof(int));
+    local_row_index = malloc((row_count[my_rank] + 1) * sizeof(int));
+    if(!local_v || !local_col_index || !local_row_index){ 
+            fprintf(stderr, "malloc failed on rank %d\n", my_rank); MPI_Abort(MPI_COMM_WORLD, 1);
     }
     else{
         local_v = NULL;
