@@ -519,7 +519,7 @@ int main(int argc, char *argv[]){
 
     free(dian_a);
     free(dian_b);
-    // free(dian_c);
+    free(dian_c);
 
     free(row_index);
     if(my_rank == 0){
